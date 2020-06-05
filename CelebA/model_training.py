@@ -1,0 +1,198 @@
+
+# coding: utf-8
+
+import numpy as np
+import tensorflow as tf
+from scipy import misc
+import imageio
+from PIL import Image
+import os
+from skimage.color import rgb2gray
+import argparse
+import sys
+import tempfile
+import matplotlib.pyplot as plt
+import time
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+
+
+def preprocess(attr_name, noise=False, epsilon=1.0):
+  celeb_images = np.load(attr_name+'_images.npy')
+  celeb_labels = np.load(attr_name+'_labels.npy')
+
+  celeb_images = np.asarray(celeb_images, dtype=np.float32)
+  celeb_labels = np.asarray(celeb_labels, dtype=np.float32)
+
+  celeb_images = 1.0 - celeb_images / 255.0
+
+  if noise:
+    noise = np.random.laplace(scale=(2352/epsilon), size=(1,2352))
+    noise = noise / block_size
+    for i in range(block_size):
+      celeb_images[i,:] = celeb_images[i,:] + noise
+
+  randomize = np.arange(len(celeb_images))
+  np.random.shuffle(randomize)
+  celeb_images_random = celeb_images[randomize]
+  celeb_labels_random = celeb_labels[randomize]
+
+  return celeb_images_random, celeb_labels_random
+
+train_images, train_labels = preprocess('block5', noise=True, epsilon=2.0)
+test_images, test_labels = preprocess('test')
+
+
+
+FLAGS = None
+
+
+def deepnn(x):
+  """deepnn builds the graph for a deep net for classifying digits.
+  Args:
+    x: an input tensor with the dimensions (N_examples, 784), where 784 is the
+    number of pixels in a standard MNIST image.
+  Returns:
+    A tuple (y, keep_prob). y is a tensor of shape (N_examples, 10), with values
+    equal to the logits of classifying the digit into one of 10 classes (the
+    digits 0-9). keep_prob is a scalar placeholder for the probability of
+    dropout.
+  """
+  # Reshape to use within a convolutional neural net.
+  # Last dimension is for "features" - there is only one here, since images are
+  # grayscale -- it would be 3 for an RGB image, 4 for RGBA, etc.
+  with tf.name_scope('reshape'):
+    x_image = tf.reshape(x, [-1, 28, 28, 3])
+
+  # First convolutional layer - maps one grayscale image to 32 feature maps.
+  with tf.name_scope('conv1'):
+    W_conv1 = weight_variable([5, 5, 3, 32])
+    b_conv1 = bias_variable([32])
+    h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
+
+  # Pooling layer - downsamples by 2X.
+  with tf.name_scope('pool1'):
+    h_pool1 = max_pool_2x2(h_conv1)
+
+  # Second convolutional layer -- maps 32 feature maps to 64.
+  with tf.name_scope('conv2'):
+    W_conv2 = weight_variable([5, 5, 32, 64])
+    b_conv2 = bias_variable([64])
+    h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
+
+  # Second pooling layer.
+  with tf.name_scope('pool2'):
+    h_pool2 = max_pool_2x2(h_conv2)
+
+  # Third convolutional layer -- maps 64 feature maps to 128.
+  with tf.name_scope('conv3'):
+    W_conv3 = weight_variable([5, 5, 64, 128])
+    b_conv3 = bias_variable([128])
+    h_conv3 = tf.nn.relu(conv2d(h_pool2, W_conv3) + b_conv3)
+
+  # Third pooling layer.
+  with tf.name_scope('pool3'):
+    h_pool3 = max_pool_2x2(h_conv3)
+
+  # Fully connected layer 1 -- after 2 round of downsampling, our 28x28 image
+  # is down to 7x7x128 feature maps -- maps this to 1024 features.
+  with tf.name_scope('fc1'):
+    W_fc1 = weight_variable([4 * 4 * 128, 1024])
+    b_fc1 = bias_variable([1024])
+
+    h_pool3_flat = tf.reshape(h_pool3, [-1, 4 * 4 * 128])
+    h_fc1 = tf.nn.relu(tf.matmul(h_pool3_flat, W_fc1) + b_fc1)
+
+  # Dropout - controls the complexity of the model, prevents co-adaptation of
+  # features.
+  with tf.name_scope('dropout'):
+    keep_prob = tf.placeholder(tf.float32)
+    h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
+
+  # Map the 1024 features to 2 classes, one for each digit
+  with tf.name_scope('fc2'):
+    W_fc2 = weight_variable([1024, 2])
+    b_fc2 = bias_variable([2])
+
+    y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
+  return y_conv, keep_prob
+
+
+def conv2d(x, W):
+  """conv2d returns a 2d convolution layer with full stride."""
+  return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+
+
+def max_pool_2x2(x):
+  """max_pool_2x2 downsamples a feature map by 2X."""
+  return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
+                        strides=[1, 2, 2, 1], padding='SAME')
+
+
+def weight_variable(shape):
+  """weight_variable generates a weight variable of a given shape."""
+  initial = tf.truncated_normal(shape, stddev=0.1)
+  return tf.Variable(initial)
+
+
+def bias_variable(shape):
+  """bias_variable generates a bias variable of a given shape."""
+  initial = tf.constant(0.1, shape=shape)
+  return tf.Variable(initial)
+
+
+# Create the model
+x = tf.placeholder(tf.float32, [None, 2352])
+
+# Define loss and optimizer
+y_ = tf.placeholder(tf.float32, [None, 2])
+
+# Build the graph for the deep net
+y_conv, keep_prob = deepnn(x)
+
+with tf.name_scope('loss'):
+  cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=y_,
+                                                          logits=y_conv)
+  loss = tf.reduce_mean(cross_entropy)
+#tf.summary.scalar('cross_entropy', cross_entropy)
+
+with tf.name_scope('adam_optimizer'):
+  train_step = tf.train.AdamOptimizer(1e-4).minimize(loss)
+
+with tf.name_scope('accuracy'):
+  correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
+  correct_prediction = tf.cast(correct_prediction, tf.float32)
+  accuracy = tf.reduce_mean(correct_prediction)
+
+sess = tf.InteractiveSession()
+saver = tf.train.Saver(max_to_keep=1)
+saver.restore(sess, 'ckpt/model.ckpt')
+# cur_loss = sess.run(cross_entropy, feed_dict={x: train_images, y_: train_labels, keep_prob: 0.5})
+# ## find the top 500 loss items
+# top_idx = np.argpartition(cur_loss, -500)[-500:]
+# print(cur_loss[top_idx])
+# train_images = train_images[top_idx]
+# train_labels = train_labels[top_idx]
+
+# tf.global_variables_initializer().run()
+print('test accuracy %g' % sess.run(accuracy, feed_dict={x: test_images, y_: test_labels, keep_prob: 1.0}))
+# saver.save(sess, 'ckpt/model.ckpt')
+batch_size = 100
+training_epochs = 30
+total_batch = int(train_images.shape[0] / batch_size)
+epoch_accuracy = []
+iteration = []
+for epoch in range(training_epochs):
+  for i in range(total_batch):
+    batch_x, batch_y = train_images[i * batch_size: (
+        i + 1) * batch_size], train_labels[i * batch_size: (i + 1) * batch_size]
+    if i % 10 == 0:
+      train_accuracy = sess.run(
+          accuracy, feed_dict={x: batch_x, y_: batch_y, keep_prob: 0.5})
+      print('step %d, training accuracy %g' % (i, train_accuracy))
+    sess.run(train_step, feed_dict={x: batch_x, y_: batch_y, keep_prob: 0.5})
+
+
+# print(len(train_images))
+  print('test accuracy %g' % sess.run(accuracy, feed_dict={x: test_images, y_: test_labels, keep_prob: 1.0}))
+
+# saver.save(sess, 'ckpt/model.ckpt')
