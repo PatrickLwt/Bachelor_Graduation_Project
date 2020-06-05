@@ -1,0 +1,32 @@
+line_length=100
+title=满足不同隐私程度的数据训练模型的效果(一)
+file_name=pricelab2medae.png
+plot_type=both
+xlabel=$\epsilon$
+xtype=log
+xlabeldetail=()
+x_range=auto
+ylabel=均方误差（1e8)
+ytype=normal
+ylabeldetail=()
+y_range=auto
+minor=False
+markersize=15
+linewidth=6
+title_size=25
+loc=4
+every=1
+markevery=1
+labels=['5个数据块','10个数据块']
+xdata=[]
+ydata=[]
+skip_data=[]
+subplot=0
+subplot_loc='0 0 0 0'
+label_starter=###LABEL_STARTER###
+data_starter=###DATA_STARTER###
+0.01 4.568661767 7.50624257
+0.04 4.66947778 5.35023787
+0.1 2.28030759 1.68733725
+0.4 2.17133006 1.40635497
+1.0 1.26769057 1.51283123

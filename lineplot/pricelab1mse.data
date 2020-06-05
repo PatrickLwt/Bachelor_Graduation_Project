@@ -1,0 +1,31 @@
+line_length=100
+title=选择不同年份数据块的模型表现（一）
+file_name=pricelab1mse.png
+plot_type=both
+xlabel=数据个数
+xtype=normal
+xlabeldetail=()
+x_range=auto
+ylabel=均方误差(1e8)
+ytype=normal
+ylabeldetail=()
+y_range=auto
+minor=False
+markersize=15
+linewidth=6
+title_size=25
+loc=4
+every=1
+markevery=1
+labels=['2017年份数据','2016年份数据','2015年份数据','2014年份数据']
+xdata=[]
+ydata=[]
+skip_data=[]
+subplot=0
+subplot_loc='0 0 0 0'
+label_starter=###LABEL_STARTER###
+data_starter=###DATA_STARTER###
+5000 4.47012510 1.06575973 3.11009717 4.58022667
+10000 4.28428650 1.05670698 3.02390811 4.34284528
+15000 4.41105724 0.95460237 3.00892214 4.37017680
+20000 4.23626406 0.90392578 2.88270828 4.57440749

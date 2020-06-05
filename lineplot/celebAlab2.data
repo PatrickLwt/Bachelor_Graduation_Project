@@ -1,0 +1,32 @@
+line_length=100
+title=满足不同隐私程度的数据训练模型的效果
+file_name=celebAlab2.png
+plot_type=both
+xlabel=$\epsilon$
+xtype=normal
+xlabeldetail=()
+x_range=auto
+ylabel=模型准确率(%)
+ytype=normal
+ylabeldetail=()
+y_range=auto
+minor=False
+markersize=15
+linewidth=6
+title_size=25
+loc=4
+every=1
+markevery=1
+labels=['Block5']
+xdata=[]
+ydata=[]
+skip_data=[]
+subplot=0
+subplot_loc='0 0 0 0'
+label_starter=###LABEL_STARTER###
+data_starter=###DATA_STARTER###
+0.5 21.7
+1.0 43.88
+1.5 66.14
+2.0 72.06
+2.5 71.04

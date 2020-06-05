@@ -1,0 +1,31 @@
+line_length=100
+title=选择不同年份数据块的模型表现（二）
+file_name=pricelab1medae.png
+plot_type=both
+xlabel=数据个数
+xtype=normal
+xlabeldetail=()
+x_range=auto
+ylabel=绝对中位差(1e4)
+ytype=normal
+ylabeldetail=()
+y_range=auto
+minor=False
+markersize=15
+linewidth=6
+title_size=25
+loc=4
+every=1
+markevery=1
+labels=['2017年份数据','2016年份数据','2015年份数据','2014年份数据']
+xdata=[]
+ydata=[]
+skip_data=[]
+subplot=0
+subplot_loc='0 0 0 0'
+label_starter=###LABEL_STARTER###
+data_starter=###DATA_STARTER###
+5000 1.7477 0.6137 1.1610 1.4148
+10000 1.7714 0.5990 1.1408 1.3566
+15000 1.7670 0.5558 1.1250 1.3617
+20000 1.7290 0.5630 1.0959 1.3825

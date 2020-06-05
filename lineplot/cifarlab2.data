@@ -1,0 +1,32 @@
+line_length=100
+title=满足不同隐私程度的数据训练模型的效果
+file_name=cifarlab2.png
+plot_type=both
+xlabel=$\epsilon$
+xtype=log
+xlabeldetail=()
+x_range=auto
+ylabel=模型准确率(%)
+ytype=normal
+ylabeldetail=()
+y_range=auto
+minor=False
+markersize=15
+linewidth=6
+title_size=25
+loc=4
+every=1
+markevery=1
+labels=['选择5个数据块','选择10个数据块','选择15个数据块']
+xdata=[]
+ydata=[]
+skip_data=[]
+subplot=0
+subplot_loc='0 0 0 0'
+label_starter=###LABEL_STARTER###
+data_starter=###DATA_STARTER###
+1 16.4 20 21.8
+3.5 18 26.4 28.4
+10 18.2 29.4 30.6
+35 19.2 34.2 37.8
+100 21.4 39.8 45
